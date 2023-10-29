@@ -32,7 +32,7 @@ class ProductManager {
     const productFound = this.products.find((product) => product.id === id);
     return productFound;
   };
-  addProduct = (title, description, price, thumbnail, code, stock) => {
+  addProduct = (title, description, price, thumbnail, code, status, stock) => {
     this.sinkDB();
     const id = this.getNextId();
     const product = {
@@ -42,6 +42,7 @@ class ProductManager {
       description,
       thumbnail,
       code,
+      status,
       stock,
     };
     if (this.products.some((product) => product.code === code)) {
@@ -51,15 +52,7 @@ class ProductManager {
     fs.writeFileSync(this.path, JSON.stringify(this.products));
     return product;
   };
-  updateProduct = async (
-    id,
-    title,
-    description,
-    price,
-    thumbnail,
-    code,
-    stock
-  ) => {
+  updateProduct = async (product) => {
     try {
       const existFile = fs.existsSync(this.path);
       if (!existFile) {
@@ -69,47 +62,46 @@ class ProductManager {
         this.products = JSON.parse(data);
       }
       const { id } = product;
-      if (!id) {
-        return "invalis ID";
-      }
-      let productUpdate = this.products.find((p) => p.id === id);
-      if (!productUpdate) {
-        return "Not Found.";
-      }
+
+      if (!id) return "invalid ID";
+
+      let productToUpdate = this.products.find((p) => p.id === id);
+
+      if (!productToUpdate) return "Not Found.";
+
       let newArray = this.products.filter((p) => p.id !== id);
-      let verifyCode = this.products.find((p) => p.code !== code);
-      if (verifyCode) {
-        return "El code ya existe";
-      }
-      productUpdate = { productUpdate, ...product };
+
+      // let verifyCode = this.products.find((p) => p.code === code);
+
+      // if (verifyCode) return "El code ya existe";
+
+      let productUpdate = { ...productToUpdate, ...product };
+
       newArray.push(productUpdate);
+
       this.products = newArray;
+
       await fs.promises.writeFile(this.path, JSON.stringify(this.products));
-      return productUpdate
+      return productUpdate;
     } catch (error) {
+      console.log(error);
       return "error";
     }
   };
   deleteProduct = (id) => {
-    this.sinkDB();
     const nuevoArray = this.products.filter((product) => product.id !== id);
-    this.products = nuevoArray;
+    if (!nuevoArray) {
+      return "la puta madre"
+    }
     fs.writeFileSync(this.path, JSON.stringify(this.products));
-    return "Eliminado correctamente";
+
+    return nuevoArray
   };
 }
-
-const manager = new ProductManager("./DB.json");
-//manager.addProduct('celular', 'lorem', 500, 'img.jpg', 10)
-// manager.addProduct('pepitos', 'lorem', 500, 'img.jpg', 10)
-// // productManager.addProduct('cacao', 'lorem', 500, 'img.jpg', 10)
-// // productManager.addProduct('galletas', 'lorem', 500, 'img.jpg', 10)
-// // productManager.addProduct('chupetines', 'lorem', 500, 'img.jpg', 10)
-manager.updateProduct(1, 'chupetines', 'lorem', 500, 'img.jpg', 10)
-// console.log(manager.getProduct());
-// // console.log(productManager.getProductbyId());
-// // console.log(productManager.updateProduct('loro', 'lorem', 500, 'img.jpg', 10));
-// // console.log(productManager.updateProduct('carucha', 'lorem', 500, 'img.jpg', 10));
-// // console.log(productManager.deleteProduct())
+const manager = new ProductManager("./DB.json")
+console.log(manager.addProduct("title", 125, "", "", "1", true, 45));
+console.log(manager.addProduct("title", 125, "", "", "2",true, 45));
+console.log(manager.addProduct("title", 125, "", "", "3",true, 45));
+console.log(manager.addProduct("title", 125, "", "", "4",true, 45));
 
 export default manager;
